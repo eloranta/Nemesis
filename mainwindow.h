@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QTcpSocket>
+#include <QRegularExpression>
 
 class QLineEdit;
 class QTextEdit;
@@ -29,4 +30,7 @@ private:
     QPushButton* connectButton;
     QTextEdit* logEdit;
     QString findDxccCountry(const QString& dxCall, const QString& ctyFilePath);
+    QString band(const QString& frequency);
+
+    QRegularExpression re;
 };

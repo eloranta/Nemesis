@@ -6,7 +6,6 @@
 #include <QHBoxLayout>
 #include <QHostAddress>
 #include <QMessageBox>
-#include <QRegularExpression>
 #include <QFile>
 #include <QApplication>
 
@@ -42,11 +41,35 @@ void MainWindow::connected()
     socket->write("og3z\r\n");
 }
 
+QString MainWindow::band(const QString& freq)
+{
+    const int freqHz = freq.toDouble() * 1000.0;
+    if (freqHz >= 1800000 && freqHz <= 2000000)    return "160m";
+    if (freqHz >= 3500000 && freqHz <= 4000000)    return "80m";
+    if (freqHz >= 5330500 && freqHz <= 5403500)    return "60m";
+    if (freqHz >= 7000000 && freqHz <= 7300000)    return "40m";
+    if (freqHz >= 10100000 && freqHz <= 10150000)  return "30m";
+    if (freqHz >= 14000000 && freqHz <= 14350000)  return "20m";
+    if (freqHz >= 18068000 && freqHz <= 18168000)  return "17m";
+    if (freqHz >= 21000000 && freqHz <= 21450000)  return "15m";
+    if (freqHz >= 24890000 && freqHz <= 24990000)  return "12m";
+    if (freqHz >= 28000000 && freqHz <= 29700000)  return "10m";
+    if (freqHz >= 50000000 && freqHz <= 54000000)  return "6m";
+    if (freqHz >= 70000000 && freqHz <= 71000000)  return "4m";
+    if (freqHz >= 144000000 && freqHz <= 148000000) return "2m";
+    if (freqHz >= 222000000 && freqHz <= 225000000) return "1.25m";
+    if (freqHz >= 420000000 && freqHz <= 450000000) return "70cm";
+    if (freqHz >= 902000000 && freqHz <= 928000000) return "33cm";
+    if (freqHz >= 1240000000 && freqHz <= 1300000000) return "23cm";
+
+    return "Unknown";
+}
+
 void MainWindow::readData()
 {
     QString line = socket->readAll();
 
-    QRegularExpression re(R"(DX de (\w+):\s+(\d+\.\d+)\s+(\w+)\s+(.+?)\s+(\d{4})Z\x07\x07\r\n)");
+    re.setPattern(R"(DX de (\w+):\s+(\d+\.\d+)\s+(\w+)\s+(.+?)\s+(\d{4})Z\x07\x07\r\n)");
     QRegularExpressionMatch match = re.match(line);
 
     if (match.hasMatch()) {
@@ -57,7 +80,7 @@ void MainWindow::readData()
         QString time = match.captured(5);
         QString dxcc = findDxccCountry(dxCall, qApp->applicationDirPath() + "/cty.dat");
 
-        qDebug() << time << dxCall << dxcc<< frequency << spotter << comment;
+        qDebug() << time << dxCall << dxcc<< band(frequency) << spotter << comment;
     }
  }
 
@@ -74,7 +97,6 @@ QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFil
 
     QTextStream in(&file);
     QString currentCountry;
-    bool expectingPrefixes = false;
 
     while (!in.atEnd()) {
         QString line = in.readLine();
@@ -87,12 +109,11 @@ QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFil
             QStringList fields = line.split(':', Qt::SkipEmptyParts);
             if (fields.size() >= 1) {
                 currentCountry = fields[0].trimmed();
-                expectingPrefixes = true;
             }
-        } else if (expectingPrefixes) {
+        } else {
             // Prefixes line (starts with whitespace)
             line = line.trimmed();
-            QStringList prefixes = line.split(',', Qt::SkipEmptyParts);
+            const QStringList prefixes = line.split(',', Qt::SkipEmptyParts);
             //qDebug() << currentCountry << prefixes;
 
             for (QString prefix : prefixes) {
@@ -102,17 +123,15 @@ QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFil
                 if (prefix.endsWith("*") || prefix.endsWith(";"))
                 {
                     QString base = prefix.left(prefix.length() - 1);
-                    if (dxCall.toUpper().startsWith(base.toUpper()))
+                    if (dxCall.startsWith(base))
                         return currentCountry;
                 }
                 else
                 {
-                    //qDebug() << dxCall << prefix;
-                    if (dxCall.toUpper().startsWith(prefix.toUpper()))
+                    if (dxCall.startsWith(prefix))
                         return currentCountry;
                 }
             }
-            expectingPrefixes = false; // Move to next block
         }
     }
 
