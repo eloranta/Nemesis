@@ -6,6 +6,7 @@
 #include <QHBoxLayout>
 #include <QHostAddress>
 #include <QMessageBox>
+#include <QRegularExpression>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), socket(new QTcpSocket(this))
@@ -41,10 +42,25 @@ void MainWindow::connected()
 
 void MainWindow::readData()
 {
-    QString data = socket->readAll();
-    if (data.startsWith("DX de "))
-        logEdit->append(data);
-}
+    QString line = socket->readAll();
+
+    QRegularExpression re(R"(DX de (\w+):\s+(\d+\.\d+)\s+(\w+)\s+(.+?)\s+(\d{4})Z\x07\x07\r\n)");
+    QRegularExpressionMatch match = re.match(line);
+
+    if (match.hasMatch()) {
+        QString spotter = match.captured(1);
+        QString frequency = match.captured(2);
+        QString dxCall = match.captured(3);
+        QString comment = match.captured(4);
+        QString time = match.captured(5);
+
+        qDebug() << "Spotter:" << spotter;
+        qDebug() << "Frequency:" << frequency;
+        qDebug() << "DX Station:" << dxCall;
+        qDebug() << "Comment:" << comment;
+        qDebug() << "Time:" << time;
+    }
+ }
 
 void MainWindow::socketError(QAbstractSocket::SocketError)
 {
