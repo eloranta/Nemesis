@@ -28,4 +28,5 @@ private:
     QLineEdit* portEdit;
     QPushButton* connectButton;
     QTextEdit* logEdit;
+    QString findDxccCountry(const QString& dxCall, const QString& ctyFilePath);
 };

@@ -7,6 +7,8 @@
 #include <QHostAddress>
 #include <QMessageBox>
 #include <QRegularExpression>
+#include <QFile>
+#include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), socket(new QTcpSocket(this))
@@ -53,12 +55,66 @@ void MainWindow::readData()
         QString dxCall = match.captured(3);
         QString comment = match.captured(4);
         QString time = match.captured(5);
+        QString dxcc = findDxccCountry(dxCall, qApp->applicationDirPath() + "/cty.dat");
 
-        qDebug() << time << dxCall << frequency << spotter << comment;
+        qDebug() << time << dxCall << dxcc<< frequency << spotter << comment;
     }
  }
 
 void MainWindow::socketError(QAbstractSocket::SocketError)
 {
     logEdit->append("Socket error: " + socket->errorString());
+}
+
+QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFilePath)
+{
+    QFile file(ctyFilePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return "Unknown";
+
+    QTextStream in(&file);
+    QString currentCountry;
+    bool expectingPrefixes = false;
+
+    while (!in.atEnd()) {
+        QString line = in.readLine();
+
+        // Skip empty lines or comments
+        if (line.isEmpty() || line.startsWith("#")) continue;
+
+        if (!line.startsWith(' ') && !line.startsWith('\t')) {
+            // Country header line
+            QStringList fields = line.split(':', Qt::SkipEmptyParts);
+            if (fields.size() >= 1) {
+                currentCountry = fields[0].trimmed();
+                expectingPrefixes = true;
+            }
+        } else if (expectingPrefixes) {
+            // Prefixes line (starts with whitespace)
+            line = line.trimmed();
+            QStringList prefixes = line.split(',', Qt::SkipEmptyParts);
+            //qDebug() << currentCountry << prefixes;
+
+            for (QString prefix : prefixes) {
+                prefix = prefix.trimmed();
+                if (prefix.isEmpty()) continue;
+
+                if (prefix.endsWith("*"))
+                {
+                    QString base = prefix.left(prefix.length() - 1);
+                    if (dxCall.toUpper().startsWith(base.toUpper()))
+                        return currentCountry;
+                }
+                else
+                {
+                    //qDebug() << dxCall << prefix;
+                    if (dxCall.toUpper().startsWith(prefix.toUpper()))
+                        return currentCountry;
+                }
+            }
+            expectingPrefixes = false; // Move to next block
+        }
+    }
+
+    return "Unknown";
 }
