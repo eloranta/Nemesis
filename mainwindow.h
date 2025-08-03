@@ -1,13 +1,11 @@
-#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+#pragma once
 
 #include <QMainWindow>
+#include <QTcpSocket>
 
-QT_BEGIN_NAMESPACE
-namespace Ui {
-class MainWindow;
-}
-QT_END_NAMESPACE
+class QLineEdit;
+class QTextEdit;
+class QPushButton;
 
 class MainWindow : public QMainWindow
 {
@@ -17,7 +15,17 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+private slots:
+    void connectToServer();
+    void connected();
+    void readData();
+    void socketError(QAbstractSocket::SocketError socketError);
+
 private:
-    Ui::MainWindow *ui;
+    QTcpSocket* socket;
+
+    QLineEdit* ipEdit;
+    QLineEdit* portEdit;
+    QPushButton* connectButton;
+    QTextEdit* logEdit;
 };
-#endif // MAINWINDOW_H
