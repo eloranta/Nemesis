@@ -99,7 +99,7 @@ QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFil
                 prefix = prefix.trimmed();
                 if (prefix.isEmpty()) continue;
 
-                if (prefix.endsWith("*"))
+                if (prefix.endsWith("*") || prefix.endsWith(";"))
                 {
                     QString base = prefix.left(prefix.length() - 1);
                     if (dxCall.toUpper().startsWith(base.toUpper()))
