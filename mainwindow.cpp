@@ -54,11 +54,7 @@ void MainWindow::readData()
         QString comment = match.captured(4);
         QString time = match.captured(5);
 
-        qDebug() << "Spotter:" << spotter;
-        qDebug() << "Frequency:" << frequency;
-        qDebug() << "DX Station:" << dxCall;
-        qDebug() << "Comment:" << comment;
-        qDebug() << "Time:" << time;
+        qDebug() << time << dxCall << frequency << spotter << comment;
     }
  }
 
