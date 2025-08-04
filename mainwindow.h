@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTcpSocket>
 #include <QRegularExpression>
+#include <QSqlRelationalTableModel>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -28,5 +29,6 @@ private:
     QString findDxccCountry(const QString& dxCall, const QString& ctyFilePath);
     QString band(const QString& frequency);
     QRegularExpression re;
+    QSqlRelationalTableModel spotModel;
 };
 #endif // MAINWINDOW_H
