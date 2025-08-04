@@ -1,37 +1,25 @@
-#include "MainWindow.h"
-#include <QLineEdit>
-#include <QTextEdit>
-#include <QPushButton>
-#include <QVBoxLayout>
-#include <QHBoxLayout>
-#include <QHostAddress>
-#include <QMessageBox>
+#include "mainwindow.h"
+#include "ui_mainwindow.h"
 #include <QFile>
 #include <QApplication>
 
 MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent), socket(new QTcpSocket(this))
+    : QMainWindow(parent), socket(new QTcpSocket(this)), ui(new Ui::MainWindow)
 {
-    QWidget* central = new QWidget(this);
-    QVBoxLayout* mainLayout = new QVBoxLayout(central);
-
-    logEdit = new QTextEdit();
-    logEdit->setReadOnly(true);
-
-    mainLayout->addWidget(logEdit);
-    setCentralWidget(central);
-
+    ui->setupUi(this);
     connect(socket, &QTcpSocket::connected, this, &MainWindow::connected);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readData);
     connect(socket, &QTcpSocket::errorOccurred, this, &MainWindow::socketError);
     connectToServer();
 }
 
-MainWindow::~MainWindow() {}
+MainWindow::~MainWindow()
+{
+    delete ui;
+}
 
 void MainWindow::connectToServer()
 {
-    logEdit->append("Connecting...");
     socket->connectToHost("ham.connect.fi", 7300);
     socket->waitForConnected(5000);
 }
@@ -82,11 +70,11 @@ void MainWindow::readData()
 
         qDebug() << time << dxCall << dxcc<< band(frequency) << spotter << comment;
     }
- }
+}
 
 void MainWindow::socketError(QAbstractSocket::SocketError)
 {
-    logEdit->append("Socket error: " + socket->errorString());
+    qDebug() << "Socket error: " << socket->errorString();
 }
 
 QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFilePath)
@@ -137,3 +125,4 @@ QString MainWindow::findDxccCountry(const QString& dxCall, const QString& ctyFil
 
     return "Unknown";
 }
+
