@@ -12,7 +12,7 @@ extern bool openDatabase(const QString& name)
 int main(int argc, char *argv[])
 {
     QApplication app(argc, argv);
-    if (!openDatabase("Alarm.sqlite"))
+    if (!openDatabase("Nemesis.sqlite"))
     {
         qDebug() << "Cannot open database";
         return -1;
