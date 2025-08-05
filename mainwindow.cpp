@@ -17,6 +17,7 @@ MainWindow::MainWindow(QWidget *parent)
     spotModel.select();
 
     ui->spotView->setModel(&spotModel);
+    ui->spotView->hideColumn(0);
 
     QSqlQuery query;
     query.exec(QString("create table if not exists spots ("
@@ -75,7 +76,7 @@ void MainWindow::readData()
         record.setValue("time", time);
         record.setValue("call", dxCall);
         record.setValue("dxcc", dxcc);
-        record.setValue("frequency", frequency.toInt());
+        record.setValue("frequency", (int)frequency.toDouble());
         record.setValue("band", info.band);
         record.setValue("mode", info.mode);
         record.setValue("spotter", spotter);
