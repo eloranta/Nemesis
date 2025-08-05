@@ -3,22 +3,32 @@
 #include <QFile>
 #include <QApplication>
 #include <QSqlQuery>
+#include <QSqlRecord>
+#include <QSqlError>
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent), socket(new QTcpSocket(this)), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+
+    spotModel.setTable("spots");
+    spotModel.setEditStrategy(QSqlTableModel::OnManualSubmit);
+    spotModel.select();
+
     ui->spotView->setModel(&spotModel);
 
     QSqlQuery query;
-
     query.exec(QString("create table if not exists spots ("
-                       "Id integer primary key autoincrement,"
-                       "Call text,"
-                       "Country text,"
-                       "Mode text,"
-                       "Band text,"
-                       "Message text)"));
+                       "id integer primary key autoincrement,"
+                       "time text"
+                       "call text,"
+                       "dxcc text,"
+                       "frequency integer,"
+                       "band text,"
+                       "mode text,"
+                       "spotter text,"
+                       "comment text)"));
 
     connect(socket, &QTcpSocket::connected, this, &MainWindow::connected);
     connect(socket, &QTcpSocket::readyRead, this, &MainWindow::readData);
@@ -59,6 +69,24 @@ void MainWindow::readData()
         QString dxcc = findDxccCountry(dxCall, qApp->applicationDirPath() + "/cty.dat");
         BandInfo info = frequencyToBandAndMode(frequency);
         qDebug() << time << dxCall << dxcc << frequency << info.band << info.mode << spotter << comment;
+
+        QSqlRecord record = spotModel.record();
+
+        record.setValue("time", time);
+        record.setValue("call", dxCall);
+        record.setValue("dxcc", dxcc);
+        record.setValue("frequency", frequency.toInt());
+        record.setValue("band", info.band);
+        record.setValue("mode", info.mode);
+        record.setValue("spotter", spotter);
+        record.setValue("comment", comment);
+
+        if (!spotModel.insertRecord(-1, record)) {
+            qDebug() << "Insert failed:" << spotModel.lastError().text();
+        } else {
+            spotModel.submitAll();
+            spotModel.select();  // Refresh view
+        }
     }
 }
 
