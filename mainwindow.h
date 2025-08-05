@@ -12,6 +12,12 @@ class MainWindow;
 }
 QT_END_NAMESPACE
 
+struct BandInfo
+{
+    QString band;
+    QString mode;
+};
+
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
@@ -24,11 +30,11 @@ private slots:
     void readData();
     void socketError(QAbstractSocket::SocketError socketError);
 private:
-    Ui::MainWindow *ui;
     QTcpSocket* socket;
-    QString findDxccCountry(const QString& dxCall, const QString& ctyFilePath);
-    QString band(const QString& frequency);
+    Ui::MainWindow *ui;
     QRegularExpression re;
     QSqlRelationalTableModel spotModel;
+    QString findDxccCountry(const QString& dxCall, const QString& ctyFilePath);
+    BandInfo frequencyToBandAndMode(const QString &freqkHz);
 };
 #endif // MAINWINDOW_H
